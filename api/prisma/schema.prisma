@@ -1,48 +1,41 @@
+// This is your Prisma schema file
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
-datasource db {
-  provider = "postgresql"
-  url = env("DATABASE_URL")
-}
+
 enum Role {
-  PATRON
-  LIBRARIAN
+  USER
+  ADMIN
 }
+
 model User {
-  id Int @id @default(autoincrement())
-  email String @unique
-  name String
-  role Role @default(PATRON)
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
   createdAt DateTime @default(now())
-  reviews Review[]
 }
+
 model Genre {
-  id Int @id @default(autoincrement())
-  name String @unique
-  slug String @unique
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
   books Book[]
 }
+
 model Book {
-  id Int @id @default(autoincrement())
-  title String
-  author String
-  isbn String @unique
-  totalCopies Int @default(1)
-  availableCopies Int @default(1)
-  genreId Int
-  genre Genre @relation(fields: [genreId], references: [id])
-  createdAt DateTime @default(now())
-  reviews Review[]
-}
-model Review {
-  id Int @id @default(autoincrement())
-  rating Int
-  comment String?
-  bookId Int
-  userId Int
-  book Book @relation(fields: [bookId], references: [id])
-  user User @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  @@unique([bookId, userId])
+  id              String   @id @default(cuid())
+  title           String
+  author          String
+  isbn            String   @unique
+  genreId         String
+  genre           Genre    @relation(fields: [genreId], references: [id])
+  totalCopies     Int
+  availableCopies Int
+  createdAt       DateTime @default(now())
 }
