@@ -1,55 +1,35 @@
 "use client";
 import { useEffect, useState } from "react";
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+type User = { id: string; name: string; email: string; role: string };
+
 export default function Members() {
-  const [members, setMembers] = useState<any[]>([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [error, setError] = useState("");
 
-  const fetchMembers = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/members`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setMembers(data);
-  };
-
-  useEffect(() => { fetchMembers(); }, []);
-
-  const addMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token");
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ name, email, phone }),
-    });
-    setName(""); setEmail(""); setPhone("");
-    fetchMembers();
-  };
+  useEffect(() => {
+    const load = async () => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/users`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (!res.ok) { setError(typeof data.message === "string" ? data.message : "Failed to load users"); return; }
+      setUsers(data);
+    };
+    load();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <a href="/dashboard" className="text-blue-600 text-sm">← Back to Dashboard</a>
-      <h1 className="text-2xl font-bold my-4">Members</h1>
-      <form onSubmit={addMember} className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input className="border p-2 rounded" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input className="border p-2 rounded" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="border p-2 rounded" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-        <button className="bg-blue-600 text-white py-2 rounded md:col-span-3">Add Member</button>
-      </form>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {members.map((m: any) => (
-          <div key={m._id} className="bg-white p-4 rounded shadow">
-            <h2 className="font-bold">{m.name}</h2>
-            <p className="text-sm text-gray-600">{m.email}</p>
-            <p className="text-sm text-gray-600">{m.phone}</p>
-          </div>
+    <main style={{ maxWidth: 700, margin: "20px auto", padding: 20 }}>
+      <h1>Members (Users)</h1>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <p>There is no separate Member model — Users ARE members.</p>
+      <ul>
+        {users.map((u) => (
+          <li key={u.id}>{u.name} — {u.email} — {u.role}</li>
         ))}
-      </div>
-      {members.length === 0 && <p className="text-gray-500">No members yet. Add one above.</p>}
-    </div>
+      </ul>
+      <p><a href="/dashboard">Back to Dashboard</a></p>
+    </main>
   );
 }
