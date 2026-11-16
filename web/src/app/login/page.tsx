@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,15 +14,19 @@ export default function Login() {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      const res = await fetch(`${API}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // Backend returns access_token, NOT token
+      const token = data.access_token;
+      if (!token) throw new Error("No token returned from server");
+      localStorage.setItem("token", token);
+      const { access_token, ...user } = data;
+      localStorage.setItem("user", JSON.stringify(user));
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
@@ -28,15 +34,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
-        {error && <p className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm">{error}</p>}
-        <input className="w-full border p-3 rounded mb-4" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="w-full border p-3 rounded mb-4" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button className="w-full bg-blue-600 text-white py-3 rounded font-semibold">Login</button>
-        <p className="text-center mt-4 text-sm">No account? <a href="/register" className="text-blue-600">Register</a></p>
+    <main style={{ maxWidth: 400, margin: "40px auto", padding: 20 }}>
+      <h1>Login</h1>
+      <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <button type="submit">Login</button>
       </form>
-    </div>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <p><a href="/register">No account? Register</a></p>
+    </main>
   );
 }
