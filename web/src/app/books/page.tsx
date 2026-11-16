@@ -1,58 +1,66 @@
 "use client";
 import { useEffect, useState } from "react";
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+type Book = { id: string; title: string; author: string; isbn?: string; category?: string; totalCopies: number; available: number };
+
 export default function Books() {
-  const [books, setBooks] = useState<any[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [isbn, setIsbn] = useState("");
-  const [copies, setCopies] = useState(1);
+  const [category, setCategory] = useState("");
+  const [totalCopies, setTotalCopies] = useState(1);
+  const [error, setError] = useState("");
 
-  const fetchBooks = async () => {
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/books`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setBooks(data);
+  const load = async () => {
+    const res = await fetch(`${API}/books`);
+    setBooks(await res.json());
   };
-
-  useEffect(() => { fetchBooks(); }, []);
+  useEffect(() => { load(); }, []);
 
   const addBook = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/books`, {
+    const res = await fetch(`${API}/books`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ title, author, isbn, totalCopies: copies, availableCopies: copies }),
+      body: JSON.stringify({ title, author, isbn, category, totalCopies: Number(totalCopies) }),
     });
-    setTitle(""); setAuthor(""); setIsbn(""); setCopies(1);
-    fetchBooks();
+    const data = await res.json();
+    if (!res.ok) { setError(typeof data.message === "string" ? data.message : "Failed to add book"); return; }
+    setTitle(""); setAuthor(""); setIsbn(""); setCategory(""); setTotalCopies(1);
+    load();
+  };
+
+  const del = async (id: string) => {
+    const token = localStorage.getItem("token");
+    await fetch(`${API}/books/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    load();
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <a href="/dashboard" className="text-blue-600 text-sm">← Back to Dashboard</a>
-      <h1 className="text-2xl font-bold my-4">Books</h1>
-      <form onSubmit={addBook} className="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <input className="border p-2 rounded" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-        <input className="border p-2 rounded" placeholder="Author" value={author} onChange={(e) => setAuthor(e.target.value)} required />
-        <input className="border p-2 rounded" placeholder="ISBN" value={isbn} onChange={(e) => setIsbn(e.target.value)} required />
-        <input className="border p-2 rounded" type="number" placeholder="Copies" value={copies} onChange={(e) => setCopies(Number(e.target.value))} />
-        <button className="bg-blue-600 text-white py-2 rounded md:col-span-4">Add Book</button>
+    <main style={{ maxWidth: 700, margin: "20px auto", padding: 20 }}>
+      <h1>Books</h1>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form onSubmit={addBook} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <input placeholder="Title *" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        <input placeholder="Author *" value={author} onChange={(e) => setAuthor(e.target.value)} required />
+        <input placeholder="ISBN" value={isbn} onChange={(e) => setIsbn(e.target.value)} />
+        <input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
+        <input type="number" min={1} placeholder="Total Copies" value={totalCopies} onChange={(e) => setTotalCopies(Number(e.target.value))} />
+        <button type="submit">Add Book</button>
       </form>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {books.map((b: any) => (
-          <div key={b._id} className="bg-white p-4 rounded shadow">
-            <h2 className="font-bold">{b.title}</h2>
-            <p className="text-sm text-gray-600">by {b.author}</p>
-            <p className="text-xs text-gray-500">ISBN: {b.isbn}</p>
-            <p className="text-sm mt-2">Available: {b.availableCopies} / {b.totalCopies}</p>
-          </div>
+      <ul style={{ marginTop: 20 }}>
+        {books.map((b) => (
+          <li key={b.id} style={{ marginBottom: 10 }}>
+            <b>{b.title}</b> by {b.author} — {b.category || "No category"}<br />
+            ISBN: {b.isbn || "-"} | Available: {b.available} / {b.totalCopies}{" "}
+            <button onClick={() => del(b.id)}>Delete</button>
+          </li>
         ))}
-      </div>
-      {books.length === 0 && <p className="text-gray-500">No books yet. Add one above.</p>}
-    </div>
+      </ul>
+      <p><a href="/dashboard">Back to Dashboard</a></p>
+    </main>
   );
 }
