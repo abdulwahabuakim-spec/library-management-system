@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -13,32 +15,36 @@ export default function Register() {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+      const res = await fetch(`${API}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Register failed");
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      router.push("/dashboard");
+      if (!res.ok) {
+        // NestJS returns message as string or array
+        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message;
+        throw new Error(msg || "Register failed");
+      }
+      // No token is returned on register — go to login
+      alert("Account created! Please login.");
+      router.push("/login");
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <form onSubmit={handleRegister} className="bg-white p-8 rounded shadow w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Register</h1>
-        {error && <p className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm">{error}</p>}
-        <input className="w-full border p-3 rounded mb-4" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input className="w-full border p-3 rounded mb-4" placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="w-full border p-3 rounded mb-4" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button className="w-full bg-blue-600 text-white py-3 rounded font-semibold">Register</button>
-        <p className="text-center mt-4 text-sm">Have account? <a href="/login" className="text-blue-600">Login</a></p>
+    <main style={{ maxWidth: 400, margin: "40px auto", padding: 20 }}>
+      <h1>Register</h1>
+      <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <input placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <button type="submit">Register</button>
       </form>
-    </div>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <p><a href="/login">Already have an account? Login</a></p>
+    </main>
   );
 }
