@@ -18,6 +18,12 @@ export class BooksController {
     return this.booksService.findAll();
   }
 
+  @Get('my-borrows')
+  @UseGuards(JwtAuthGuard)
+  myBorrows(@Request() req) {
+    return this.booksService.myBorrows(req.user.userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.booksService.findOne(id);
@@ -39,11 +45,5 @@ export class BooksController {
   @UseGuards(JwtAuthGuard)
   returnBook(@Param('borrowId') borrowId: string, @Request() req) {
     return this.booksService.returnBook(borrowId, req.user.userId);
-  }
-
-  @Get('my/borrows')
-  @UseGuards(JwtAuthGuard)
-  myBorrows(@Request() req) {
-    return this.booksService.myBorrows(req.user.userId);
   }
 }

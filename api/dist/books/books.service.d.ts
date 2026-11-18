@@ -4,65 +4,65 @@ export declare class BooksService {
     private prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateBookDto): Promise<{
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         author: string;
         isbn: string;
-        totalCopies: number;
         coverImage: string | null;
+        totalCopies: number;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
         genreId: number;
     }>;
     findAll(): import(".prisma/client").Prisma.PrismaPromise<{
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         author: string;
         isbn: string;
-        totalCopies: number;
         coverImage: string | null;
+        totalCopies: number;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
         genreId: number;
     }[]>;
     findOne(id: string): Promise<{
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         author: string;
         isbn: string;
-        totalCopies: number;
         coverImage: string | null;
+        totalCopies: number;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
         genreId: number;
     }>;
     remove(id: string): Promise<{
-        id: number;
-        createdAt: Date;
-        updatedAt: Date;
         title: string;
         author: string;
         isbn: string;
-        totalCopies: number;
         coverImage: string | null;
+        totalCopies: number;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
         genreId: number;
     }>;
     borrow(bookId: string, userId: string): Promise<{
         book: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
             author: string;
             isbn: string;
-            totalCopies: number;
             coverImage: string | null;
+            totalCopies: number;
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
             genreId: number;
         };
     } & {
-        id: number;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
         borrowedAt: Date;
         dueDate: Date | null;
         returnedAt: Date | null;
@@ -70,9 +70,9 @@ export declare class BooksService {
         bookId: number;
     }>;
     returnBook(borrowId: string, userId: string): Promise<{
-        id: number;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
         borrowedAt: Date;
         dueDate: Date | null;
         returnedAt: Date | null;
@@ -81,20 +81,20 @@ export declare class BooksService {
     }>;
     myBorrows(userId: string): import(".prisma/client").Prisma.PrismaPromise<({
         book: {
-            id: number;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
             author: string;
             isbn: string;
-            totalCopies: number;
             coverImage: string | null;
+            totalCopies: number;
+            createdAt: Date;
+            updatedAt: Date;
+            id: number;
             genreId: number;
         };
     } & {
-        id: number;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
         borrowedAt: Date;
         dueDate: Date | null;
         returnedAt: Date | null;

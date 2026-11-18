@@ -27,6 +27,9 @@ let BooksController = class BooksController {
     findAll() {
         return this.booksService.findAll();
     }
+    myBorrows(req) {
+        return this.booksService.myBorrows(req.user.userId);
+    }
     findOne(id) {
         return this.booksService.findOne(id);
     }
@@ -38,9 +41,6 @@ let BooksController = class BooksController {
     }
     returnBook(borrowId, req) {
         return this.booksService.returnBook(borrowId, req.user.userId);
-    }
-    myBorrows(req) {
-        return this.booksService.myBorrows(req.user.userId);
     }
 };
 exports.BooksController = BooksController;
@@ -58,6 +58,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BooksController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('my-borrows'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], BooksController.prototype, "myBorrows", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -91,14 +99,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], BooksController.prototype, "returnBook", null);
-__decorate([
-    (0, common_1.Get)('my/borrows'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Request)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], BooksController.prototype, "myBorrows", null);
 exports.BooksController = BooksController = __decorate([
     (0, common_1.Controller)('books'),
     __metadata("design:paramtypes", [books_service_1.BooksService])
