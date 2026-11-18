@@ -1,50 +1,46 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+'use client';
+import { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+export default function RegisterPage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('MEMBER');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-export default function Register() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const router = useRouter();
-
-  const handleRegister = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setError(''); setSuccess('');
     try {
-      const res = await fetch(`${API}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+      await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password, role }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        // NestJS returns message as string or array
-        const msg = Array.isArray(data.message) ? data.message.join(", ") : data.message;
-        throw new Error(msg || "Register failed");
-      }
-      // No token is returned on register — go to login
-      alert("Account created! Please login.");
-      router.push("/login");
+      setSuccess('Account created! Go to login.');
     } catch (err: any) {
       setError(err.message);
     }
-  };
+  }
+
+  const inputStyle = { padding: 10, borderRadius: 6, border: '1px solid #ddd', width: '100%', boxSizing: 'border-box' as const };
 
   return (
-    <main style={{ maxWidth: 400, margin: "40px auto", padding: 20 }}>
+    <div style={{ maxWidth: 400, margin: '40px auto', background: '#fff', padding: 24, borderRadius: 8 }}>
       <h1>Register</h1>
-      <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <input placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit">Register</button>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <input placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} required style={inputStyle} />
+        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required style={inputStyle} />
+        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={inputStyle} />
+        <select value={role} onChange={e => setRole(e.target.value)} style={inputStyle}>
+          <option value="MEMBER">Member</option>
+          <option value="LIBRARIAN">Librarian</option>
+        </select>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {success && <p style={{ color: 'green' }}>{success}</p>}
+        <button style={{ padding: 12, background: '#111', color: '#fff', border: 0, borderRadius: 6, cursor: 'pointer' }}>Create Account</button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <p><a href="/login">Already have an account? Login</a></p>
-    </main>
+    </div>
   );
 }
