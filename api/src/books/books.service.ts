@@ -7,11 +7,17 @@ export class BooksService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateBookDto) {
+    const { category, totalCopies, ...rest } = dto as any;
     return this.prisma.book.create({
       data: {
-        ...dto,
-        totalCopies: dto.totalCopies ?? 1,
-        available: dto.totalCopies ?? 1,
+        ...rest,
+        totalCopies: totalCopies ?? 1,
+        genre: {
+          connectOrCreate: {
+            where: { name: category ?? 'General' },
+            create: { name: category ?? 'General' },
+          },
+        },
       },
     });
   }
@@ -21,53 +27,53 @@ export class BooksService {
   }
 
   async findOne(id: string) {
-    const book = await this.prisma.book.findUnique({ where: { id } });
+    const book = await this.prisma.book.findUnique({ where: { id: Number(id) } });
     if (!book) throw new NotFoundException('Book not found');
     return book;
   }
 
   async remove(id: string) {
     await this.findOne(id);
-    return this.prisma.book.delete({ where: { id } });
+    return this.prisma.book.delete({ where: { id: Number(id) } });
   }
 
   async borrow(bookId: string, userId: string) {
     const book = await this.findOne(bookId);
-    if (book.available <= 0) throw new BadRequestException('No copies available');
+    if (book.totalCopies <= 0) throw new BadRequestException('No copies totalCopies');
 
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 14);
 
     await this.prisma.book.update({
-      where: { id: bookId },
-      data: { available: { decrement: 1 } },
+      where: { id: Number(bookId) },
+      data: { totalCopies: { decrement: 1 } },
     });
 
     return this.prisma.borrow.create({
-      data: { userId, bookId, dueDate },
+      data: { userId: Number(userId), bookId: Number(bookId), dueDate },
       include: { book: true },
     });
   }
 
   async returnBook(borrowId: string, userId: string) {
-    const borrow = await this.prisma.borrow.findUnique({ where: { id: borrowId } });
-    if (!borrow || borrow.userId !== userId) throw new NotFoundException('Borrow record not found');
+    const borrow = await this.prisma.borrow.findUnique({ where: { id: Number(borrowId) } });
+    if (!borrow || borrow.userId !== Number(userId)) throw new NotFoundException('Borrow record not found');
     if (borrow.returnedAt) throw new BadRequestException('Already returned');
 
     await this.prisma.book.update({
       where: { id: borrow.bookId },
-      data: { available: { increment: 1 } },
+      data: { totalCopies: { increment: 1 } },
     });
 
     return this.prisma.borrow.update({
-      where: { id: borrowId },
+      where: { id: Number(borrowId) },
       data: { returnedAt: new Date() },
     });
   }
 
   myBorrows(userId: string) {
     return this.prisma.borrow.findMany({
-      where: { userId },
+      where: { userId: Number(userId) },
       include: { book: true },
       orderBy: { borrowedAt: 'desc' },
     });
