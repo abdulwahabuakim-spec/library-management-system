@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "【entity-prisma¦canonical_name=Prisma】-client-js"
 }
 
 datasource db {
@@ -15,34 +15,45 @@ enum Role {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  name      String
   password  String
-  name      String?
   role      Role     @default(USER)
+  borrows   Borrow[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  borrows   Borrow[]
 }
 
 model Book {
+  id        String   @id @default(cuid())
+  title     String
+  author    String
+  isbn      String   @unique
+  category  String?
+  genreId   String?
+  genre     Genre?   @relation(fields: [genreId], references: [id])
+  borrows   Borrow[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Genre {
   id          String   @id @default(cuid())
-  title       String
-  author      String
-  isbn        String   @unique
-  category    String?
-  totalCopies Int      @default(1)
-  available   Int      @default(1)
+  name        String   @unique
+  description String?
+  books       Book[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  borrows     Borrow[]
 }
 
 model Borrow {
   id         String    @id @default(cuid())
   userId     String
-  bookId     String
-  borrowedAt DateTime  @default(now())
-  dueDate    DateTime
-  returnedAt DateTime?
   user       User      @relation(fields: [userId], references: [id])
+  bookId     String
   book       Book      @relation(fields: [bookId], references: [id])
+  borrowedAt DateTime  @default(now())
+  dueDate    DateTime?
+  returnedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
